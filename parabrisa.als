@@ -15,10 +15,10 @@ module parabrisa
 
 -- ASSINATURAS
 sig Parabrisa {
-	velAtual: one Velocidade,
-	velAnterior: one Velocidade,
-	velPosterior: one Velocidade,
-	bicosEjetores: one Estado
+	velAtual: Velocidade,
+	velAnterior: Velocidade,
+	velPosterior: Velocidade,
+	bicosEjetores: Estado
 }
 
 abstract sig Velocidade {}
@@ -42,24 +42,12 @@ pred validarPredicados[p:Parabrisa]{
 
 -- EJETOR DE AGUA LIGADO
 pred ejetorLigado[p:Parabrisa]{
-	( p.velAnterior = Zero ) => ( p.velAtual = Baixa and p.velPosterior = Zero ) else ( p.velAtual = p.velAnterior )
+	( p.velAnterior = Zero ) => ( p.velAtual = Baixa and p.velPosterior = Zero ) else ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
 }
 
 -- EJETOR DE AGUA DESLIGADO
 pred ejetorDesligado[p:Parabrisa]{
-	possibilidadesVelAnterior[p] and possibilidadesVelAtual[p] and possibilidadesVelPosterior[p]
-}
-
-pred possibilidadesVelAnterior[p:Parabrisa]{
-	( p.velAnterior = Zero or p.velAnterior = Baixa or p.velAnterior = Alta )
-}
-
-pred possibilidadesVelAtual[p:Parabrisa]{
-	( p.velAtual = Zero or p.velAtual = Baixa or p.velAtual = Alta )
-}
-
-pred possibilidadesVelPosterior[p:Parabrisa]{
-	( p.velPosterior = Zero or p.velPosterior = Baixa or p.velPosterior = Alta )
+	( p.velAtual = Zero or p.velAtual = Baixa or p.velAtual = Alta ) and p.velAnterior = p.velAtual and p.velPosterior = p.velAtual
 }
 
 -- TESTES
@@ -68,12 +56,15 @@ assert checkEjetorLigadoPaletaDesligada {
 }
 
 assert checkEjetorLigadoPaletaLigada {
-	all p:Parabrisa | (p.bicosEjetores = Ligado and p.velAnterior != Zero) => ( p.velAtual = p.velAnterior )
+	all p:Parabrisa | (p.bicosEjetores = Ligado and p.velAnterior != Zero) => ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
 }
 
+assert checkEjetorDesligado {
+	all p:Parabrisa | (p.bicosEjetores = Desligado) => ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
+}
 
-check checkEjetorLigadoPaletaDesligada for 1000
-check checkEjetorLigadoPaletaLigada for 1000
-
-pred show {}
+pred show []{}
 run show for 50
+check checkEjetorLigadoPaletaDesligada for 100
+check checkEjetorLigadoPaletaLigada for 100
+check checkEjetorDesligado for 100
