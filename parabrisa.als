@@ -14,11 +14,18 @@ module parabrisa
 ----------------------------------------------------------------------------------------
 
 -- ASSINATURAS
-sig Parabrisa {
+abstract one sig Parabrisa {}
+
+sig ParabrisaDesligado extends Parabrisa{
+	bicosEjetores: Desligado,
+	vel: one Velocidade
+}
+
+sig ParabrisaLigado extends Parabrisa{
 	velAtual: Velocidade,
 	velAnterior: Velocidade,
 	velPosterior: Velocidade,
-	bicosEjetores: Estado
+	bicosEjetores: Ligado
 }
 
 abstract sig Velocidade {}
@@ -26,45 +33,53 @@ one sig Zero extends Velocidade {}
 one sig Baixa extends Velocidade {}
 one sig Alta extends Velocidade {} 
 
-abstract sig Estado {}
-one sig Ligado extends Estado {}
-one sig Desligado extends Estado {}
+abstract one sig Estado {}
+sig Ligado extends Estado {}
+sig Desligado extends Estado {}
 
 -- FATOS
-fact ParabrisaFatos{
-   all p:Parabrisa | validarPredicados[p]
+fact ParabrisaDesligadoFatos{
+   all p:ParabrisaDesligado | validarPredicadosDesligado[p]
+}
+
+fact ParabrisaLigadoFatos{
+   all p:ParabrisaLigado | validarPredicadosLigado[p]
 }
 
 -- VALIDA TODOS OS PREDICADOS
-pred validarPredicados[p:Parabrisa]{
-	( p.bicosEjetores = Ligado ) => ejetorLigado[p] else ejetorDesligado[p]
+pred validarPredicadosDesligado[p:ParabrisaDesligado]{
+	ejetorDesligado[p]
 }
+
+pred validarPredicadosLigado[p:ParabrisaLigado]{
+	ejetorLigado[p]
+}
+
 
 -- EJETOR DE AGUA LIGADO
-pred ejetorLigado[p:Parabrisa]{
-	( p.velAnterior = Zero ) => ( p.velAtual = Baixa and p.velPosterior = Zero ) else ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
+pred ejetorDesligado[p:ParabrisaDesligado]{
+	p.vel = Zero or p.vel = Baixa or p.vel = Alta
 }
 
--- EJETOR DE AGUA DESLIGADO
-pred ejetorDesligado[p:Parabrisa]{
-	( p.velAtual = Zero or p.velAtual = Baixa or p.velAtual = Alta ) and p.velAnterior = p.velAtual and p.velPosterior = p.velAtual
+pred ejetorLigado[p:ParabrisaLigado]{
+	( p.velAnterior = Zero ) => ( p.velAtual = Baixa and p.velPosterior = Zero ) else ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
 }
 
 -- TESTES
 assert checkEjetorLigadoPaletaDesligada {
-	all p:Parabrisa | (p.bicosEjetores = Ligado and p.velAnterior = Zero ) =>  (p.velAtual = Baixa and p.velPosterior = Zero )
+	all p:ParabrisaLigado | (p.bicosEjetores = Ligado and p.velAnterior = Zero ) =>  (p.velAtual = Baixa and p.velPosterior = Zero )
 }
 
 assert checkEjetorLigadoPaletaLigada {
-	all p:Parabrisa | (p.bicosEjetores = Ligado and p.velAnterior != Zero) => ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
+	all p:ParabrisaLigado | (p.bicosEjetores = Ligado and p.velAnterior != Zero) => ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
 }
 
 assert checkEjetorDesligado {
-	all p:Parabrisa | (p.bicosEjetores = Desligado) => ( p.velAtual = p.velAnterior and p.velPosterior = p.velAnterior)
+	all p:ParabrisaDesligado | (p.bicosEjetores = Desligado)
 }
 
 pred show []{}
-run show for 50
-check checkEjetorLigadoPaletaDesligada for 100
-check checkEjetorLigadoPaletaLigada for 100
-check checkEjetorDesligado for 100
+--check checkEjetorLigadoPaletaDesligada for 6
+--check checkEjetorLigadoPaletaLigada for 6
+--check checkEjetorDesligado for 6
+run show for 6
